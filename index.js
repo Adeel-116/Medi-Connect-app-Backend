@@ -1,44 +1,38 @@
-// index.js
 const express = require('express');
-const bcrypt = require('bcrypt')
-const {connectDB, pool} = require('./src/config/db');  // Ensure path is correct
-
+const { connectDB } = require('./src/config/db');
+const authRoutes = require('./src/routes/authRoutes');
+const cors = require('cors');
+const session = require("express-session")
 const app = express();
 const port = 3000;
 
-connectDB()
+app.use(express.json());
 
-app.post('/signup', async (req, res) => {
-  const { fullName, email, password } = req.body;
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
 
-  if (!fullName || !email || !password) {
-    return res.status(400).json({ error: 'Please provide fullName, email, and password' });
+connectDB();
+
+app.use(session({
+  secret: 'Adeelkareem122',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false,
+    httpOnly: true,
+    maxAge: 5 * 60 * 1000 // example: 5 minutes
   }
+}))
 
-  try {
-    // Password hash karo (salt rounds = 10 recommended)
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const query = `
-      INSERT INTO users (fullName, email, password)
-      VALUES ($1, $2, $3)
-      RETURNING id, fullName, email
-    `;
-    const values = [fullName, email, hashedPassword];
 
-    const result = await pool.query(query, values);
+app.use('/', authRoutes);
 
-    res.status(201).json({ message: 'User created', user: result.rows[0] });
-  } catch (err) {
-    if (err.code === '23505') {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
+
+app.listen(3000, '0.0.0.0', () => {
+  console.log('Server is running');
 });
 
-
-app.listen(port, () => {
-  console.log(`🚀 Server listening on http://localhost:${port}`);
-});
