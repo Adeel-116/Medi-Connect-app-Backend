@@ -7,4 +7,7 @@ router.post('/login', login);
 router.post('/sent-otp', verifyEmail);
 router.post('/verify-otp', verifyOTP);
 router.post('/update-password', updatePassword);
+
+
+
 module.exports = router;

@@ -55,16 +55,25 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid email or passwor' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const token = jwtToken.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({
+    const token = jwtToken.sign(
+      { id: user.id, email: user.email, name: user.fullname },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log('User logged in:', user.email, user.id, user.fullname);
+
+    res.json({
       message: 'Login successful',
-      user: {
+      token,
+      user:{
         id: user.id,
         fullName: user.fullname,
-        email: user.email
+        email: user.email,
+        phoneNumber: user.phoneNumber,
       }
     });
   } catch (err) {
@@ -152,7 +161,6 @@ exports.verifyOTP = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 
 
