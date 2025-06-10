@@ -14,6 +14,11 @@ exports.signup = async (req, res) => {
   }
 
   try {
+    const existingEmail = await pool.query('SELECT * FROM userData WHERE email = $1', [email]);
+    if (existingEmail.rows.length > 0) {
+      console.log("Error because email already exists")
+      return res.status(401).json({ error: 'Email already exists' });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = `
       INSERT INTO userData (fullName, email, phoneNumber, password)
